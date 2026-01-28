@@ -1,0 +1,16 @@
+.idea/
+.vscode/
+.DS_Store
+Thumbs.db
+
+bin/
+dist/
+build/
+coverage/
+tmp/
+
+*.log
+*.out
+*.exe
+*.test
+

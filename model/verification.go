@@ -10,13 +10,19 @@ type GenerateLinkRequest struct {
 	RejectURL  string // 认证拒绝跳转地址
 }
 
+// WebhookPayload 是 Sumsub Webhook 回调的核心结构。
+//
+// 常见 Type（事件类型）示例：
+// - applicantCreated：创建 applicant
+// - applicantPending：进入审核队列/等待审核
+// - applicantPersonalInfoChanged：个人信息变更
 type WebhookPayload struct {
-	Type           string `json:"type"`
-	ApplicantID    string `json:"applicantId"`
+	// Type 表示本次回调的事件类型。
+	Type string `json:"type"`
+	// ApplicantID 是 Sumsub 侧 applicant 唯一标识。
+	ApplicantID string `json:"applicantId"`
+	// ExternalUserID 是你在创建 applicant / 生成链接时传入的业务侧用户标识。
 	ExternalUserID string `json:"externalUserId"`
-	InspectionID   string `json:"inspectionId"`
-	ReviewStatus   string `json:"reviewStatus"`
-	ReviewResult   struct {
-		ReviewAnswer string `json:"reviewAnswer"`
-	} `json:"reviewResult"`
+	// ReviewStatus 是审核流程状态
+	ReviewStatus string `json:"reviewStatus"`
 }

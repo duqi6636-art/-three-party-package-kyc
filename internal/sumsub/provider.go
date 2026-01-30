@@ -176,6 +176,26 @@ func (p *Provider) GenerateLink(ctx context.Context, req model.GenerateLinkReque
 	return resp.URL, nil
 }
 
+type webhookPayload struct {
+	// Type 表示本次回调的事件类型（上面的示例仅覆盖常见值）。
+	Type string `json:"type"`
+	// ApplicantID 是 Sumsub 侧 applicant 唯一标识。
+	ApplicantID string `json:"applicantId"`
+	// ExternalUserID 是你在创建/生成链接时传入的外部用户 ID（建议与你业务用户一一对应）。
+	ExternalUserID string `json:"externalUserId"`
+	// InspectionID 是 Sumsub 侧一次审核流程的标识（可能为空，取决于事件类型）。
+	InspectionID string `json:"inspectionId"`
+	// ReviewStatus 是审核状态（例如 pending/completed/reviewed 等，具体取值以 Sumsub 文档为准）。
+	ReviewStatus string `json:"reviewStatus"`
+	// ReviewResult 是审核结论信息。对于 applicantReviewed 事件，常见 ReviewAnswer：
+	// - GREEN：通过
+	// - RED：拒绝
+	// - YELLOW：需要进一步处理/人工复核（具体策略由业务决定）
+	ReviewResult struct {
+		ReviewAnswer string `json:"reviewAnswer"`
+	} `json:"reviewResult"`
+}
+
 func (p *Provider) VerifyAndParseWebhook(headers http.Header, rawBody []byte) (*model.WebhookPayload, error) {
 	if p == nil {
 		return nil, errors.New("nil provider")
@@ -191,12 +211,17 @@ func (p *Provider) VerifyAndParseWebhook(headers http.Header, rawBody []byte) (*
 		return nil, errors.New("invalid signature")
 	}
 
-	payload := &model.WebhookPayload{}
-	if err := json.Unmarshal(rawBody, payload); err != nil {
+	in := webhookPayload{}
+	if err := json.Unmarshal(rawBody, &in); err != nil {
 		return nil, fmt.Errorf("parse webhook payload: %w", err)
 	}
 
-	return payload, nil
+	return &model.WebhookPayload{
+		Type:           in.Type,
+		ApplicantID:    in.ApplicantID,
+		ExternalUserID: in.ExternalUserID,
+		ReviewStatus:   in.ReviewStatus,
+	}, nil
 }
 
 func verifyWebhookDigest(signature, secretKey string, rawBody []byte) bool {

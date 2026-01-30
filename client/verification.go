@@ -3,8 +3,9 @@ package client
 import (
 	"context"
 	"errors"
-	"github.com/dq/kyc-sdk/model"
 	"net/http"
+
+	"github.com/dq/kyc-sdk/model"
 )
 
 type GenerateLinkRequest = model.GenerateLinkRequest

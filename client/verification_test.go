@@ -101,14 +101,14 @@ func TestClient_VerifyAndParseWebhook(t *testing.T) {
 
 	h := http.Header{}
 	h.Set("X-Payload-Digest", "sha256="+sig)
-	ok, payload, err := cli.VerifyAndParseWebhook(h, raw)
+	payload, err := cli.VerifyAndParseWebhook(h, raw)
 	if err != nil {
 		t.Fatalf("VerifyAndParseWebhook: %v", err)
 	}
-	if !ok {
-		t.Fatalf("expected verified")
+	if payload == nil {
+		t.Fatalf("expected payload")
 	}
-	if payload == nil || payload.ExternalUserID != "u1" || payload.ReviewResult.ReviewAnswer != "GREEN" {
+	if payload.Type != "applicantReviewed" || payload.ApplicantID != "a1" || payload.ExternalUserID != "u1" || payload.ReviewStatus != "completed" {
 		t.Fatalf("payload mismatch: %+v", payload)
 	}
 }
@@ -121,14 +121,7 @@ func TestClient_VerifyAndParseWebhook_MissingSignature(t *testing.T) {
 		t.Fatalf("NewClient: %v", err)
 	}
 
-	ok, payload, err := cli.VerifyAndParseWebhook(http.Header{}, raw)
-	if err != nil {
-		t.Fatalf("VerifyAndParseWebhook: %v", err)
-	}
-	if ok {
-		t.Fatalf("expected not verified")
-	}
-	if payload == nil || payload.ExternalUserID != "u" {
-		t.Fatalf("payload mismatch: %+v", payload)
+	if _, err := cli.VerifyAndParseWebhook(http.Header{}, raw); err == nil {
+		t.Fatalf("expected error")
 	}
 }
